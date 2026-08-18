@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  JOINT
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  JPY
+}
+
+enum AccountStatus {
+  ACTIVE
+  CLOSED
+  FROZEN
+}
+
+model Account {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  type     AccountType   @default(CHECKING)
+  balance  Decimal       @default("0") @db.Decimal(19, 4)
+  currency Currency      @default(USD)
+  status   AccountStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation("UserAccounts", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([currency])
+  @@unique([userId, type, currency])
+  @@map("accounts")
+}
+
+model User {
+  id String @id @default(uuid())
+
+  email    String @unique
+  password String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accounts Account[] @relation("UserAccounts")
+
+  @@index([email])
+  @@map("users")
+}

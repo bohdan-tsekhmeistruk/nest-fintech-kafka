@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  JPY
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Transaction {
+  id String @id @default(uuid())
+
+  fromAccountId String  @map("from_account_id")
+  toAccountId   String? @map("to_account_id")
+
+  fromUserId String  @map("from_user_id")
+  toUserId   String? @map("to_user_id")
+
+  type        TransactionType   @default(DEPOSIT)
+  amount      Decimal           @db.Decimal(19, 4)
+  currency    Currency          @default(USD)
+  status      TransactionStatus @default(PENDING)
+  description String?
+
+  errorMessage String? @map("error_message")
+  errorCode    String? @map("error_code")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@index([type])
+  @@index([currency])
+  @@index([status])
+  @@map("transactions")
+}
