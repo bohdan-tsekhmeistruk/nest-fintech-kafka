@@ -2,6 +2,9 @@
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
   "monorepo": true,
+  "compilerOptions": {
+    "deleteOutDir": true
+  },
   "projects": {
     "accounts": {
       "type": "application",
@@ -9,6 +12,7 @@
       "entryFile": "main",
       "sourceRoot": "apps/accounts/src",
       "compilerOptions": {
+        "deleteOutDir": true,
         "tsConfigPath": "apps/accounts/tsconfig.app.json"
       }
     },
@@ -18,6 +22,7 @@
       "entryFile": "main",
       "sourceRoot": "apps/transactions/src",
       "compilerOptions": {
+        "deleteOutDir": true,
         "tsConfigPath": "apps/transactions/tsconfig.app.json"
       }
     }
