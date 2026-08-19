@@ -5,8 +5,7 @@
     "outDir": "../../dist/apps/accounts",
     "baseUrl": "./",
     "paths": {
-      "src/*": ["./src/*"],
-      "generated/*": ["./generated/*"]
+      "src/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
