@@ -1,0 +1,20 @@
+# Node
+node_modules/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Generated (Prisma client is gitignored; must be regenerated via `prisma generate` / postinstall — see pre-push hook)
+generated/
+dist/
+coverage/
