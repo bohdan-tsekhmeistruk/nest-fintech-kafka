@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-bash scripts/pre-push-review.sh
+bash .husky/scripts/pre-push-review.sh
