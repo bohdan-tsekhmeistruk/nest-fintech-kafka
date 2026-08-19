@@ -20,6 +20,11 @@
 
 set -euo pipefail
 
+# --- Resolve this script's real directory ---
+# git hooks (husky) run us via `sh -e .husky/pre-push`, so $0 is not the script
+# path. BASH_SOURCE always points at the running script regardless of invocation.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
 # --- Ensure nvm/node (and opencode) are on PATH ---
 # git hooks run in a clean shell with no interactive login, so nvm's PATH
 # additions are missing. Load nvm and activate the default node so both
@@ -140,15 +145,29 @@ if [ -z "$FILES" ]; then
   exit 0
 fi
 
+# Only pass files that actually exist on disk — renamed/deleted files in the
+# diff would make opencode fail with "File not found" (seen on Windows: path in
+# the diff but not on disk for the model to read).
+EXISTING_FILES=""
+for f in $FILES; do
+  [ -f "$f" ] && EXISTING_FILES="$EXISTING_FILES $f"
+done
+
 VERDICT_FILE=$(mktemp)
-PROMPT_FILE="$(dirname "$0")/layer1-review.prompt.md"
+PROMPT_FILE="$SCRIPT_DIR/layer1-review.prompt.md"
 if [ -f "$PROMPT_FILE" ]; then
   PROMPT=$(sed "s/{{BASE}}/$BASE/g" "$PROMPT_FILE")
 else
+  warn "НЕ найдено: $PROMPT_FILE — использую встроенный fallback-промт"
+  warn "Промт-файл лежит в scripts/ рядом со скриптом; проверь что он есть после clone/pull."
   PROMPT="Review the uncommitted work vs base $BASE. Find only hard bugs that block CI (hardcoded secrets, broken imports, removed permission checks, missing await). Reply exactly [PASS] or [BLOCK] <reason>, then up to 5 issues."
 fi
-opencode run --model "$REVIEW_MODEL" "$PROMPT" \
-  -f $FILES > "$VERDICT_FILE" 2>&1 || true
+if [ -n "$EXISTING_FILES" ]; then
+  opencode run --model "$REVIEW_MODEL" "$PROMPT" \
+    -f $EXISTING_FILES > "$VERDICT_FILE" 2>&1 || true
+else
+  opencode run --model "$REVIEW_MODEL" "$PROMPT" > "$VERDICT_FILE" 2>&1 || true
+fi
 tail -40 "$VERDICT_FILE"
 echo
 
