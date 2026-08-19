@@ -30,14 +30,25 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   nvm use node >/dev/null 2>&1 || true
 fi
 
-# Load the project-root .env so OPENROUTER_API_KEY / OPENROUTER_REVIEW_MODEL
-# are available for opencode. Git hooks don't inherit interactive env, and the
-# project .env is gitignored so secrets stay local.
-if [ -z "${OPENROUTER_API_KEY:-}" ] && [ -f "./.env" ]; then
-  set -a
-  # shellcheck disable=SC1090
-  . "./.env"
-  set +a
+# Load the project-root .env — ALWAYS, and its values take priority over the
+# inherited environment (so OPENROUTER_REVIEW_MODEL in .env wins even when the
+# shell already exports variables). Empty values are skipped so a placeholder
+# .env (e.g. OPENROUTER_API_KEY=) does NOT clobber a real key from the shell.
+if [ -f "./.env" ]; then
+  while IFS= read -r LINE || [ -n "$LINE" ]; do
+    case "$LINE" in
+      ''|'#'*) continue ;;
+    esac
+    KEY="${LINE%%=*}"
+    VAL="${LINE#*=}"
+    case "$KEY" in ''|'#'*) continue ;; esac
+    # strip surrounding quotes
+    VAL="${VAL%\"}"; VAL="${VAL#\"}"
+    VAL="${VAL%\'}"; VAL="${VAL#\'}"
+    if [ -n "$VAL" ]; then
+      export "$KEY=$VAL"
+    fi
+  done < "./.env"
 fi
 
 REVIEW_MODEL="${REVIEW_MODEL:-${OPENROUTER_REVIEW_MODEL:-openrouter/poolside/laguna-s-2.1:free}}"
