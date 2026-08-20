@@ -97,9 +97,7 @@ if [ -f package.json ]; then
   [ -f bun.lockb ]         && PM="bun" || true
   PM="${PM:-npm}"
   $PM run lint >/dev/null 2>&1 || warn "lint: скрипта нет или ошибки (см. вывод без -q)"
-  if [ -f tsconfig.json ]; then
-    $PM exec -- tsc --noEmit 2>&1 | tail -15 || warn "typecheck: ошибки выше"
-  fi
+  $PM run typecheck 2>&1 | tail -15 || warn "typecheck: скрипта нет или ошибки выше"
 elif [ -f go.mod ]; then
   log "Go-проект — go vet"
   go vet ./... 2>&1 | tail -15 || warn "go vet: ошибки выше"
